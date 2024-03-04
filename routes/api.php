@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\SpotifyController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -16,4 +17,13 @@ use Illuminate\Support\Facades\Route;
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
+});
+
+Route::prefix('v1')->group(function () {
+    Route::get('/spotify/token', [SpotifyController::class, 'getToken']);
+    Route::get('/spotify/artist/{artistId}', [SpotifyController::class, 'getArtist']);
+    Route::get('/spotify/playlists', [SpotifyController::class, 'getPlaylists']);
+    Route::get('/spotify/weekly-songs', [SpotifyController::class, 'getWeeklySongs']);
+    Route::get('/spotify/monthly-songs', [SpotifyController::class, 'getMonthlySongs']);
+    Route::get('/spotify/all-time-songs', [SpotifyController::class, 'getAllTimeSongs']);
 });
