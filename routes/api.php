@@ -21,6 +21,7 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
 Route::prefix('v1')->group(function () {
     Route::get('/spotify/token', [SpotifyController::class, 'getToken']);
+    Route::get('/spotify/profile', [SpotifyController::class, 'getProfile']);
     Route::get('/spotify/artist/{artistId}', [SpotifyController::class, 'getArtist']);
     Route::get('/spotify/playlists', [SpotifyController::class, 'getPlaylists']);
     Route::get('/spotify/weekly-songs', [SpotifyController::class, 'getWeeklySongs']);
