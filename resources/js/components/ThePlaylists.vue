@@ -2,7 +2,7 @@
 import axios from 'axios'
 import { onMounted } from 'vue';
 
-const localURL = 'http://localhost:8001'
+const localURL = 'http://localhost:8000'
 const triviumId = '278ZYwGhdK6QTzE3MFePnP?si=gi3zD6jOT2Cjv7KJMHjyew'
 
 function getTrivium() {
@@ -17,6 +17,8 @@ function getTrivium() {
             console.log(errors)
         })
 }
+
+
 
 onMounted(() => {
     getTrivium()

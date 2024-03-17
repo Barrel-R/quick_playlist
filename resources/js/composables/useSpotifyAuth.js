@@ -1,19 +1,24 @@
 import { ref } from 'vue'
 
-export function useSpotifyAuth() {
+export async function useSpotifyAuth() {
     const clientId = import.meta.env.VITE_SPOTIFY_CLIENT_ID
     const params = new URLSearchParams(window.location.search)
     const code = params.get('code')
     const loading = ref(false)
     const error = ref(null)
-    const profileData = ref(null)
-    const verifier = ref(null)
+    const token = ref(localStorage.getItem('access_token'))
 
-    if (!code) {
-        verifier.value = redirectToAuthCodeFlow(clientId);
+    async function authenticate() {
+        if (!code) {
+            redirectToAuthCodeFlow();
+        } else {
+            if (!token.value) {
+                await exchangeCodeForToken(code)
+            }
+        }
     }
 
-    async function redirectToAuthCodeFlow(clientId) {
+    async function redirectToAuthCodeFlow() {
         const verifier = generateCodeVerifier(128);
         const challenge = await generateCodeChallenge(verifier);
 
@@ -22,7 +27,7 @@ export function useSpotifyAuth() {
         const params = new URLSearchParams();
         params.append("client_id", clientId);
         params.append("response_type", "code");
-        params.append("redirect_uri", "http://localhost:8001/callback");
+        params.append("redirect_uri", "http://localhost:8000/callback");
         params.append("scope", "user-read-private user-read-email");
         params.append("code_challenge_method", "S256");
         params.append("code_challenge", challenge);
@@ -51,56 +56,58 @@ export function useSpotifyAuth() {
             .replace(/=+$/, '');
     }
 
-    async function fetchProfileData() {
-        try {
-            loading.value = true
-            error.value = null
-
-            if (!code) {
-                redirectToAuthCodeFlow(clientId)
-            }
-
-            const accessToken = await exchangeCodeForToken(code)
-            profileData.value = await fetchProfile(accessToken)
-        } catch (err) {
-            error.value = err.message
-        } finally {
-            loading.value = false
-        }
-    }
-
     async function exchangeCodeForToken() {
+        const verifier = localStorage.getItem('verifier') ? localStorage.getItem('verifier') : redirectToAuthCodeFlow()
         axios.post('https://accounts.spotify.com/api/token', {
             grant_type: 'authorization_code',
             code: code,
-            redirect_uri: 'http://localhost:8001/callback',
+            redirect_uri: 'http://localhost:8000/callback',
             client_id: clientId,
-            code_verifier, verifier
+            code_verifier: verifier,
+        }, {
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            }
         }).then(response => {
+            console.log(response.data)
+            localStorage.setItem('access_token', response.data.access_token)
+            token.value = response.data.access_token
             return response.data.access_token
         }).catch(errors => {
             console.log(errors)
+            error.value = errors.response.data.error.message
         })
     }
 
-    async function fetchProfile(accessToken) {
-        axios.get('https://api.spotify.com/v1/me', {
+    function refreshToken() {
+        const refreshToken = localStorage.getItem('refresh_token')
+        const url = 'https://accounts.spotify.com/api/token'
+
+        axios.post(url, {
+            grant_type: 'refresh_token',
+            refresh_token: refreshToken,
+            client_id: clientId
+        }, {
             headers: {
-                'Authorization': `Bearer ${accessToken}`,
+                'Content-Type': 'application/x-www-form-urlencoded'
             }
         }).then(response => {
-            profileData.value = response.data
+            console.log('refresh success')
             console.log(response.data)
+            localStorage.setItem('refresh_token', response.data.refresh_token)
+            localStorage.setItem('access_token', response.data.access_token)
         }).catch(errors => {
+            console.log('refresh error')
             console.log(errors)
         })
     }
 
+    authenticate()
+
     return {
         code,
-        profileData,
         loading,
         error,
-        fetchProfileData,
+        refreshToken
     }
 }
