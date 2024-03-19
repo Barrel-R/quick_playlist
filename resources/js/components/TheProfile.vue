@@ -1,8 +1,9 @@
 <script async setup>
 import { onMounted, ref } from 'vue';
 import { useSpotifyAuth } from '../composables/useSpotifyAuth'
+import { useRefresh } from '../composables/useRefresh'
 
-const { code, loading, error, refreshToken } = useSpotifyAuth()
+const { code, loading, error } = useSpotifyAuth()
 
 const profileData = ref(null)
 
@@ -18,7 +19,7 @@ function fetchProfile() {
     }).catch(errors => {
         console.log(errors)
         if (errors.response.data.error.status === 401) {
-            // refresh but holy shit
+            useRefresh()
         }
     })
 }

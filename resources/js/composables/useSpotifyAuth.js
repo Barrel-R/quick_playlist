@@ -12,7 +12,7 @@ export async function useSpotifyAuth() {
         if (!code) {
             redirectToAuthCodeFlow();
         } else {
-            if (!token.value) {
+            if (!token.value || token.value == 'null' || token.value == 'undefined') {
                 await exchangeCodeForToken(code)
             }
         }
@@ -79,35 +79,11 @@ export async function useSpotifyAuth() {
         })
     }
 
-    function refreshToken() {
-        const refreshToken = localStorage.getItem('refresh_token')
-        const url = 'https://accounts.spotify.com/api/token'
-
-        axios.post(url, {
-            grant_type: 'refresh_token',
-            refresh_token: refreshToken,
-            client_id: clientId
-        }, {
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded'
-            }
-        }).then(response => {
-            console.log('refresh success')
-            console.log(response.data)
-            localStorage.setItem('refresh_token', response.data.refresh_token)
-            localStorage.setItem('access_token', response.data.access_token)
-        }).catch(errors => {
-            console.log('refresh error')
-            console.log(errors)
-        })
-    }
-
     authenticate()
 
     return {
         code,
         loading,
         error,
-        refreshToken
     }
 }

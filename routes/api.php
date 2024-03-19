@@ -20,6 +20,7 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 });
 
 Route::prefix('v1')->group(function () {
+    Route::post('/spotify/refresh', [SpotifyController::class, 'refreshToken']);
     Route::get('/spotify/token', [SpotifyController::class, 'getToken']);
     Route::get('/spotify/profile', [SpotifyController::class, 'getProfile']);
     Route::get('/spotify/artist/{artistId}', [SpotifyController::class, 'getArtist']);

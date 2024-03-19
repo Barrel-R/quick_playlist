@@ -3,18 +3,32 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use Illuminate\Http\Client\Response;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 
 class SpotifyController extends Controller
 {
-    public function getToken()
+    public function getToken(): Response
     {
         $response = Http::asForm()
             ->post('https://accounts.spotify.com/api/token', [
                 'grant_type' => 'client_credentials',
                 'client_id' => env('VITE_SPOTIFY_CLIENT_ID'),
                 'client_secret' => env('SPOTIFY_CLIENT_SECRET'),
+            ]);
+
+        return $response;
+    }
+
+    public function refreshToken(Request $request): Response
+    {
+        $response = Http::asForm()
+            ->post('https://accounts.spotify.com/api/token', [
+                'grant_type' => 'refresh_token',
+                'client_id' => env('VITE_SPOTIFY_CLIENT_ID'),
+                'client_secret' => env('SPOTIFY_CLIENT_SECRET'),
+                'refresh_token' => $request['refreshToken'],
             ]);
 
         return $response;
